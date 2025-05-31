@@ -14,10 +14,47 @@
     </div>
 </nav>
 <div class="container">
-    <div class="alert alert-success">Hoş geldin, giriş başarılı!</div>
-    <h3 class="mb-3">Ana Panel</h3>
-    <!-- Buraya Trendyol API, rapor, grafik vs. ekleyeceğiz -->
-    <p>Devamında buraya sipariş, satış ve rapor ekranları gelecek.</p>
+    <h3 class="mb-3">API Bilgileri ile Sipariş Çek</h3>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <form method="POST" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <input name="client_id" type="text" class="form-control" placeholder="Client ID" required>
+        </div>
+        <div class="col-md-4">
+            <input name="client_secret" type="password" class="form-control" placeholder="Client Secret" required>
+        </div>
+        <div class="col-md-4">
+            <input name="supplier_id" type="text" class="form-control" placeholder="Supplier ID" required>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary w-100">Siparişleri Getir</button>
+        </div>
+    </form>
+    {% if orders %}
+    <h4>Son Siparişler</h4>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Sipariş No</th>
+                <th>Alıcı</th>
+                <th>Tarih</th>
+                <th>Tutar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order['id'] }}</td>
+                <td>{{ order.get('customerFirstName', '-') }} {{ order.get('customerLastName', '-') }}</td>
+                <td>{{ order['createdDate'] }}</td>
+                <td>{{ order.get('totalPrice', '-') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
 </div>
 </body>
 </html>
