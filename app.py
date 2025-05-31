@@ -3,7 +3,7 @@ import os
 import requests
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "cokGizliBirAnahtar")  # Değiştir!
+app.secret_key = os.environ.get("SECRET_KEY", "cokGizliBirAnahtar")
 
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "123456"
@@ -30,37 +30,48 @@ def panel():
     orders = None
     error = ""
     if request.method == "POST":
-        client_id = request.form.get("client_id")
-        client_secret = request.form.get("client_secret")
+        token = request.form.get("token")
         supplier_id = request.form.get("supplier_id")
-        try:
-            # 1. Önce token al
+        access_token = None
+
+        if token:  # Eğer elle token girilmişse onu kullan
+            access_token = token.strip()
+        else:
+            # Client ID/Secret ile token almaya çalış
+            client_id = request.form.get("client_id")
+            client_secret = request.form.get("client_secret")
             token_url = "https://api.trendyol.com/sapigw/token"
             payload = {
                 "client_id": client_id,
                 "client_secret": client_secret,
                 "grant_type": "client_credentials"
             }
-            token_response = requests.post(token_url, data=payload)
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+            token_response = requests.post(token_url, data=payload, headers=headers)
             if token_response.status_code == 200:
                 access_token = token_response.json().get("access_token")
                 if not access_token:
                     error = "Token alınamadı. Yanıt: " + str(token_response.json())
-                else:
-                    # 2. Token ile siparişleri çek
-                    orders_url = f"https://api.trendyol.com/sapigw/suppliers/{supplier_id}/orders"
-                    headers = {
-                        "Authorization": f"Bearer {access_token}",
-                        "Content-Type": "application/json"
-                    }
-                    params = {"size": 5}
-                    orders_response = requests.get(orders_url, headers=headers, params=params)
-                    if orders_response.status_code == 200:
-                        orders = orders_response.json().get("content", [])
-                    else:
-                        error = f"Sipariş çekilemedi: {orders_response.status_code} - {orders_response.text}"
+                    return render_template("panel.html", orders=orders, error=error)
             else:
                 error = f"Token alınamadı: {token_response.status_code} - {token_response.text}"
+                return render_template("panel.html", orders=orders, error=error)
+
+        # Token ile sipariş çek
+        try:
+            orders_url = f"https://api.trendyol.com/sapigw/suppliers/{supplier_id}/orders"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            params = {"size": 5}
+            orders_response = requests.get(orders_url, headers=headers, params=params)
+            if orders_response.status_code == 200:
+                orders = orders_response.json().get("content", [])
+            else:
+                error = f"Sipariş çekilemedi: {orders_response.status_code} - {orders_response.text}"
         except Exception as e:
             error = f"Hata: {e}"
     return render_template("panel.html", orders=orders, error=error)
