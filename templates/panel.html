@@ -14,19 +14,23 @@
     </div>
 </nav>
 <div class="container">
-    <h3 class="mb-3">API Bilgileri ile Sipariş Çek</h3>
+    <h3 class="mb-3">API Bilgileri veya Token ile Sipariş Çek</h3>
     {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
     <form method="POST" class="row g-3 mb-4">
-        <div class="col-md-4">
-            <input name="client_id" type="text" class="form-control" placeholder="Client ID" required>
+        <div class="col-md-12">
+            <input name="token" type="text" class="form-control" placeholder="ELLE TOKEN GİR (opsiyonel)">
+            <small class="form-text text-muted">Geçerli bir token girerseniz, aşağıdaki alanlara gerek yoktur.</small>
         </div>
         <div class="col-md-4">
-            <input name="client_secret" type="password" class="form-control" placeholder="Client Secret" required>
+            <input name="client_id" type="text" class="form-control" placeholder="Client ID (API Key)">
         </div>
         <div class="col-md-4">
-            <input name="supplier_id" type="text" class="form-control" placeholder="Supplier ID" required>
+            <input name="client_secret" type="password" class="form-control" placeholder="Client Secret (API Secret)">
+        </div>
+        <div class="col-md-4">
+            <input name="supplier_id" type="text" class="form-control" placeholder="Supplier ID (Satıcı ID)" required>
         </div>
         <div class="col-12">
             <button type="submit" class="btn btn-primary w-100">Siparişleri Getir</button>
