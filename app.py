@@ -30,16 +30,16 @@ def panel():
     orders = None
     error = ""
     if request.method == "POST":
-        token = request.form.get("token")
-        supplier_id = request.form.get("supplier_id")
+        token = request.form.get("token", "").strip()
+        supplier_id = request.form.get("supplier_id", "").strip()
         access_token = None
 
         if token:  # Eğer elle token girilmişse onu kullan
-            access_token = token.strip()
+            access_token = token
         else:
             # Client ID/Secret ile token almaya çalış
-            client_id = request.form.get("client_id")
-            client_secret = request.form.get("client_secret")
+            client_id = request.form.get("client_id", "").strip()
+            client_secret = request.form.get("client_secret", "").strip()
             token_url = "https://api.trendyol.com/sapigw/token"
             payload = {
                 "client_id": client_id,
@@ -49,14 +49,18 @@ def panel():
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded"
             }
-            token_response = requests.post(token_url, data=payload, headers=headers)
-            if token_response.status_code == 200:
-                access_token = token_response.json().get("access_token")
-                if not access_token:
-                    error = "Token alınamadı. Yanıt: " + str(token_response.json())
+            try:
+                token_response = requests.post(token_url, data=payload, headers=headers, timeout=20)
+                if token_response.status_code == 200:
+                    access_token = token_response.json().get("access_token")
+                    if not access_token:
+                        error = "Token alınamadı. Yanıt: " + str(token_response.json())
+                        return render_template("panel.html", orders=orders, error=error)
+                else:
+                    error = f"Token alınamadı: {token_response.status_code} - {token_response.text}"
                     return render_template("panel.html", orders=orders, error=error)
-            else:
-                error = f"Token alınamadı: {token_response.status_code} - {token_response.text}"
+            except Exception as e:
+                error = f"Token isteğinde hata oluştu: {e}"
                 return render_template("panel.html", orders=orders, error=error)
 
         # Token ile sipariş çek
@@ -67,7 +71,7 @@ def panel():
                 "Content-Type": "application/json"
             }
             params = {"size": 5}
-            orders_response = requests.get(orders_url, headers=headers, params=params)
+            orders_response = requests.get(orders_url, headers=headers, params=params, timeout=20)
             if orders_response.status_code == 200:
                 orders = orders_response.json().get("content", [])
             else:
